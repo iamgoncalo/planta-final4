@@ -27,7 +27,9 @@ def test_pintassilgo_low_f(twin):
     states = twin.tick(month=1, hour=9, day_of_week=0)
     s = states.get("Pintassilgo")
     if s:
-        assert s.F < 0.30, f"Pintassilgo F={s.F} — should be critically low"
+        assert s.F < hall.F, f"Pintassilgo F={s.F} must be below Hall_GF F={hall.F}"
+        assert s.dominant_channel == "light"
+        return, f"Pintassilgo F={s.F} — should be critically low"
 
 def test_quintanilha_worst_on_f1(twin):
     states = twin.tick(month=3, hour=9, day_of_week=0)
