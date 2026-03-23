@@ -207,7 +207,7 @@ class DigitalTwin:
     def _update_computed(self, state: RoomState, room: Room) -> None:
         """Recompute D, P, F, economic, alert for a room state."""
         from .distortion import d_thermal, d_co2, d_humidity, d_light, d_noise, d_occupancy, d_spatial
-        from freedom import P_SPATIAL, _DISTANCES, _MAX_DIST
+        from .freedom import P_SPATIAL, _DISTANCES, _MAX_DIST
 
         sp = state.setpoint_c
         channels = {

@@ -34,7 +34,7 @@ def compute_P_spatial(room_id: str, distances: dict[str, int]) -> float:
     """
     max_d = max(distances.values()) if distances else 1
     d = distances.get(room_id, max_d)
-    return 1.0 - (d / max(max_d, 1))
+    return 1.0 / (1.0 + d / max(max_d, 1))
 
 
 def compute_F(P_spatial: float, D_total: float) -> float:

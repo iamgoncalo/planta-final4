@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from .config import cfg
 from .digital_twin import RoomState
 
-DB_PATH = Path(cfg.memory["hot_db"])
+DB_PATH = Path(cfg.memory.hot_db)
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 SCHEMA_SQL = """
@@ -155,7 +155,7 @@ def write_readings(states: dict[str, RoomState]) -> None:
 
 def purge_old_readings() -> None:
     """Keep only last 7 days. HL-09 RGPD compliance."""
-    hot_days = cfg.memory["hot_days"]
+    hot_days = cfg.memory.hot_days
     with get_db() as conn:
         conn.execute(
             "DELETE FROM readings WHERE ts < datetime('now', ?)",

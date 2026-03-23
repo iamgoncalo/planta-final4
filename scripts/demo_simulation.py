@@ -61,7 +61,7 @@ def run(validate: bool = False):
         r = ROOMS[rid]
         print(f"  {rid:<22} F_min={f:.3f}  {'★ CRITICAL' if r.is_critical else ''}")
 
-    print(f"\nSeed complete → {cfg.memory['hot_db']}")
+    print(f"\nSeed complete → {cfg.memory.hot_db}")
 
     if validate:
         print("\n── VALIDATION ASSERTIONS ──")
