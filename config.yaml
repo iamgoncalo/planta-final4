@@ -1,0 +1,173 @@
+# PlantaOS — config.yaml
+# SINGLE SOURCE OF TRUTH. No numeric literals in backend/ Python.
+# CI fails if backend/ contains any of these values hardcoded.
+
+building:
+  name: "HORSE CFT"
+  location: "Rua da Junqueira, Cacia, 3800-640 Aveiro, Portugal"
+  area_m2: 950
+  floors: 2
+  rooms: 24
+  gf_area_m2: 502
+  ff_area_m2: 447
+  july_closed: true
+  annual_users_2025: 3219          # David Fleury email 3 Mar 2026
+  footprint_length_m: 34
+  footprint_width_m: 15
+
+hvac:
+  units: 12
+  capacity_btu_h: 24000
+  capacity_w_thermal: 7034         # 24000 BTU/h = 7034 W
+  cop: 3.2
+  electrical_w_per_unit: 2198      # 7034 / 3.2
+
+comfort:
+  winter_min_c: 18                 # David Fleury email 3 Mar 2026
+  winter_max_c: 22
+  winter_setpoint_c: 20
+  summer_min_c: 22
+  summer_max_c: 26
+  summer_setpoint_c: 24
+  humidity_min_pct: 40             # ISO 7730
+  humidity_max_pct: 60
+  humidity_target_pct: 50
+  lux_classroom_target: 400        # EN 12464-1
+  lux_classroom_min: 300
+  lux_critical: 150                # CIE 117-1995
+  co2_clean_ppm: 700               # EN 15251 Cat I reference
+  co2_alert_ppm: 800               # PlantaOS internal — 25% margin before legal
+  co2_legal_ppm: 1000              # Portaria 353-A/2013 Portugal
+  noise_max_db: 45                 # ISO 11690-1
+  noise_target_db: 40
+  outdoor_co2_ppm: 420
+
+distortion:
+  weights:                         # MUST sum to 1.0 — validated at startup
+    thermal:   0.40
+    co2:       0.22
+    humidity:  0.16
+    light:     0.12
+    noise:     0.05
+    occupancy: 0.03
+    spatial:   0.02
+
+economics:
+  smn_hourly_eur: 5.44             # SMN 2026 · Decree-Law 139/2025
+  smn_monthly_eur: 942.4           # 5.44 × 173.2h
+  tsu_employer_rate: 0.2375
+  energy_peak_eur_kwh: 0.218       # ERSE 2026 (09–22h weekday)
+  energy_mid_eur_kwh: 0.185        # ERSE 2026 (08–09h, 22–24h weekday)
+  energy_offpeak_eur_kwh: 0.138    # ERSE 2026 (night + weekend)
+  carbon_intensity_kg_kwh: 0.202   # REN 2025 Portugal grid
+  rent_eur_m2_month: 6.00          # Aveiro industrial market 2026
+  hours_per_month: 173.33          # 40h/week × 52/12
+  fdbt_exponent: 1.5               # non-linear comfort impact exponent
+  salary_segments:
+    trainee:
+      pct: 0.78
+      gross_month: 1050
+      employer_hourly: 7.50
+      label: "Trainee/Operator"
+    instructor:
+      pct: 0.12
+      gross_month: 1800
+      employer_hourly: 12.85
+      label: "Instructor/Technician"
+    supervisor:
+      pct: 0.05
+      gross_month: 2800
+      employer_hourly: 19.99
+      label: "Supervisor/Engineer"
+    manager:
+      pct: 0.05
+      gross_month: 4500
+      employer_hourly: 32.10
+      label: "Manager/Director"
+
+pso:
+  n_particles: 30
+  n_iterations: 100
+  inertia_w: 0.729
+  c1: 1.494
+  c2: 1.494
+  search_T_min: 17.0
+  search_T_max: 28.0
+  search_fan_min: 35.0
+  search_fan_max: 70.0
+  energy_penalty_weight: 0.1
+  seed: 2026
+
+aco:
+  alpha: 1.0                       # pheromone weight
+  beta: 2.0                        # heuristic weight (F score)
+  rho: 0.1                         # evaporation rate
+  initial_pheromone: 1.0
+  avoid_rooms:                     # HARD: never assign groups here
+    - Pintassilgo                  # 0 AC + 85 lux — unsafe for groups
+
+lbm:
+  tick_seconds: 60
+  arima_order: [2, 1, 2]
+  arima_seasonal: [1, 0, 1, 24]
+  anomaly_z_threshold: 2.0
+  anomaly_min_ticks: 2
+  co2_generation_m3_min_person: 0.004
+  thermal_dt_min: 5
+
+fire_fusion:
+  threshold: 0.8
+  signals:
+    temp_spike_w: 0.3
+    co2_spike_w: 0.2
+    humidity_spike_w: 0.2
+    smoke_detector_w: 0.2
+    occupancy_sudden_drop_w: 0.1
+
+ai:
+  model: "claude-sonnet-4-5-20251001"
+  max_tokens: 1000
+  cost_limit_day_eur: 2.00
+  cost_limit_month_eur: 7.00
+  alert_max_calls_day: 10
+  chatbot_max_turns: 10
+  chatbot_max_words: 200
+  optimiser_max_tokens: 200
+  alert_max_tokens: 500
+
+memory:
+  hot_db: "data/plantaos.db"
+  warm_db: "data/plantaos_warm.duckdb"
+  cold_dir: "data/archive"
+  hot_days: 7
+  warm_days: 30
+  rgpd_raw_discard_seconds: 60
+
+thermal:
+  ach_default: 0.8                 # air changes per hour default
+  rc_time_constant_min: 90        # RC thermal model time constant
+  solar_gain_factor: 0.15
+  wall_u_value: 2.0               # W/m²K (older building)
+  window_fraction: 0.2
+  people_heat_w: 80               # watts per occupant
+
+standards:
+  temperature: "ISO 7730"
+  lighting: "EN 12464-1"
+  co2: "Portaria 353-A/2013"
+  humidity: "ISO 7730"
+  noise: "ISO 11690-1"
+  ventilation: "EN 15251"
+  occupancy: "EN 13779"
+
+research:
+  grant: "FCT 2025.00020.AIVLAB.DEUCALION"
+  orcid: "0009-0008-6255-7724"
+  doi_1: "10.5281/zenodo.18636095"
+  doi_2: "10.5281/zenodo.18845574"
+  ssrn: "6304936"
+  d_geometric_r2: 0.993           # Deucalion confirmed 3×, seed=2026
+  d_additive_r2: 0.860            # comparison baseline
+  alignment_r2: 0.82              # 57518 trials
+  alignment_trials: 57518
+  seed: 2026

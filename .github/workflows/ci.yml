@@ -1,0 +1,64 @@
+name: PlantaOS CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality-gates:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Gate 1 — D-weights sum to 1.0
+        run: python scripts/check_weights.py
+
+      - name: Gate 2 — No hardcoded values in backend/
+        run: python scripts/check_no_hardcodes.py
+
+      - name: Gate 3 — Config loads without error
+        run: python -c "from backend.config import cfg; print(f'Config OK — seed={cfg.pso.seed}')"
+
+      - name: Gate 4 — Rooms registry loads
+        run: python -c "from backend.rooms import ROOMS; assert len(ROOMS)==24; print(f'Rooms OK — {len(ROOMS)} rooms')"
+
+      - name: Gate 5 — BFS P_spatial computes
+        run: python -c "from backend.freedom import P_SPATIAL; assert P_SPATIAL['Hall_GF']==max(P_SPATIAL.values()); print('BFS OK')"
+
+      - name: Gate 6 — Simulation runs
+        run: python scripts/demo_simulation.py --validate
+
+      - name: Gate 7 — pytest with coverage
+        run: pytest tests/ -v --cov=backend --cov-fail-under=70 --cov-report=term-missing
+
+      - name: Gate 8 — Check Pintassilgo in ACO avoid list
+        run: python -c "from backend.config import cfg; assert 'Pintassilgo' in cfg.aco.avoid_rooms; print('Pintassilgo guard OK')"
+
+      - name: Gate 9 — Check AI model string matches expected
+        run: python -c "from backend.config import cfg; assert 'claude' in cfg.ai.model; print(f'AI model: {cfg.ai.model}')"
+
+  frontend:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    needs: quality-gates
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install and build
+        working-directory: frontend
+        run: |
+          npm install
+          npm run build
